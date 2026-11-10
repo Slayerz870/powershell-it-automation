@@ -1,0 +1,4 @@
+health.json
+inventory.csv
+*.log
+.DS_Store
