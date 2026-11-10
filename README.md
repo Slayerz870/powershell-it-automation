@@ -50,3 +50,88 @@ Invoke-Pester -Path .\tests -CI
 ## Portfolio intent
 
 This repository demonstrates readable PowerShell, CIM inventory, structured output, documentation, conservative defaults, and CI scaffolding. It does not claim production deployment or measured business impact.
+
+## Real-World Testing & Validation
+
+### Windows 11 Workstation Health Monitoring
+
+The `Get-WorkstationHealth.ps1` script was tested on a Windows 11 Pro workstation using Windows PowerShell 5.1.
+
+**Test environment**
+- Operating System: Windows 11 Pro
+- PowerShell: Windows PowerShell 5.1
+- Installed Memory: 31.92 GB
+- System Drive: Approximately 930 GB
+- Validation: GitHub Actions with Pester 5
+
+### Example Execution
+
+```powershell
+.\Get-WorkstationHealth.ps1 | ConvertTo-Json -Depth 5
+```
+
+### Sample Output
+
+The following is a sanitized example based on a successful workstation test.
+
+```json
+{
+  "ComputerName": "WINDOWS-TEST-PC",
+  "OS": "Microsoft Windows 11 Pro",
+  "OSVersion": "10.0.26200",
+  "UptimeDays": 0.09,
+  "TotalRAMGB": 31.92,
+  "FixedDisks": [
+    {
+      "Drive": "C:",
+      "SizeGB": 930.4,
+      "FreeGB": 798.71,
+      "FreePercent": 85.8,
+      "Status": "Available"
+    },
+    {
+      "Drive": "D:",
+      "SizeGB": null,
+      "FreeGB": null,
+      "FreePercent": null,
+      "Status": "Capacity unavailable"
+    }
+  ],
+  "PendingReboot": true,
+  "RebootIndicators": [
+    "PendingFileRenameOperations"
+  ]
+}
+```
+
+### Troubleshooting & Engineering Improvements
+
+**Issue 1: Incorrect System Uptime**
+
+Initial testing revealed that the CIM `LastBootUpTime` timestamp was inconsistent with the workstation's current system clock, resulting in a negative uptime calculation.
+
+**Resolution:** Replaced the timestamp-based uptime calculation with the Windows `\System\System Up Time` performance counter and added error handling.
+
+**Issue 2: Zero-Capacity Disk Reporting**
+
+A logical disk was detected without valid capacity information.
+
+**Resolution:** Added conditional disk-capacity validation and an explicit `Capacity unavailable` status.
+
+**Issue 3: Automated Test Failure**
+
+The initial Pester test failed because of how the test script located and accessed the PowerShell files.
+
+**Resolution:** Refactored the Pester test setup using `BeforeAll` and a script-scoped path variable.
+
+### Validation Results
+
+- PowerShell syntax validation: Passed
+- GitHub Actions CI workflow: Passed
+- Windows 11 functional execution: Passed
+- Uptime calculation: Verified
+- Disk capacity handling: Verified
+- Structured JSON output: Verified
+
+**Engineering approach:** Identify, reproduce, diagnose, correct, and validate technical issues using real-world execution results and automated testing.
+
