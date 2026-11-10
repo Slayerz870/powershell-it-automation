@@ -1,13 +1,31 @@
+
 # Requires Pester 5+
+
+BeforeAll {
+    $script:ScriptsPath = Join-Path $PSScriptRoot '../scripts'
+}
+
 Describe 'PowerShell automation scripts' {
-    $scripts = @(Get-ChildItem -Path (Join-Path $PSScriptRoot '../scripts') -Filter '*.ps1')
+
     It 'includes scripts to validate' {
+        $scripts = @(Get-ChildItem -Path $script:ScriptsPath -Filter '*.ps1' -File)
         $scripts.Count | Should -BeGreaterThan 0
     }
-    It 'parses <_> without syntax errors' -ForEach $scripts {
-        $tokens = $null
-        $parseErrors = $null
-        [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$parseErrors)
-        $parseErrors.Count | Should -Be 0
+
+    It 'parses without syntax errors' {
+        $scripts = @(Get-ChildItem -Path $script:ScriptsPath -Filter '*.ps1' -File)
+
+        foreach ($file in $scripts) {
+            $tokens = $null
+            $parseErrors = $null
+
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+                $file.FullName,
+                [ref]$tokens,
+                [ref]$parseErrors
+            )
+
+            $parseErrors.Count | Should -Be 0
+        }
     }
 }
