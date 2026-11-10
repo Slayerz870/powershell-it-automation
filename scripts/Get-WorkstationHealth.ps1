@@ -25,17 +25,26 @@ if ($PSVersionTable.PSEdition -eq 'Core' -and -not $IsWindows) {
 $os = Get-CimInstance -ClassName Win32_OperatingSystem
 $computer = Get-CimInstance -ClassName Win32_ComputerSystem
 
-# Normalize boot time to UTC
-$nowUtc = [DateTime]::UtcNow
-$bootUtc = $os.LastBootUpTime.ToUniversalTime()
-$uptime = $nowUtc - $bootUtc
 
-# Guard against invalid or future boot timestamps
-$uptimeDays = if ($uptime.TotalSeconds -ge 0) {
-    [math]::Round($uptime.TotalDays, 2)
-} else {
-    $null
+# Calculate uptime using Windows performance counters
+$nowUtc = [DateTime]::UtcNow
+
+try {
+    $uptimeSeconds = (
+        Get-Counter '\System\System Up Time' -ErrorAction Stop
+    ).CounterSamples.CookedValue
+
+    $uptimeDays = if ($uptimeSeconds -ge 0) {
+        [math]::Round($uptimeSeconds / 86400, 2)
+    } else {
+        $null
+    }
 }
+catch {
+    Write-Warning "Unable to retrieve system uptime: $($_.Exception.Message)"
+    $uptimeDays = $null
+}
+
 
 # Fixed disk information
 $disks = @(
